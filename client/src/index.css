@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--primary);
+  --color-background-custom: var(--background-custom);
+  --color-card-custom: var(--card-custom);
+  --color-border-custom: var(--border-custom);
+  --color-text-custom: var(--text-custom);
+  --color-text-muted: var(--text-muted);
+}
+
+:root {
+  --background-custom: #f8fafc; /* slate 50 */
+  --card-custom: #ffffff; /* pure white */
+  --border-custom: #e2e8f0; /* slate 200 */
+  --text-custom: #0f172a; /* slate 900 */
+  --text-muted: #64748b; /* slate 500 */
+  --primary: #4f46e5; /* indigo 600 */
+  --radius: 12px;
+}
+
+.dark {
+  --background-custom: #090d16; /* deep custom dark slate */
+  --card-custom: #111827; /* slate 900 */
+  --border-custom: #1f2937; /* slate 800 */
+  --text-custom: #f8fafc; /* slate 50 */
+  --text-muted: #94a3b8; /* slate 400 */
+  --primary: #6366f1; /* indigo 500 */
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Smooth Base Transitions */
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: var(--background-custom);
+  color: var(--text-custom);
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Clean Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-custom);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
