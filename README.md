@@ -27,12 +27,3 @@ An AI-powered Personal Finance & Expense Tracking application built using the ME
 └── .gitignore       # Git ignore rules
 ```
 
-## Setup Instructions
-
-1. Clone the repository.
-2. In the `server` directory, copy `.env.example` to `.env` and fill in your variables.
-3. Install dependencies and run in development mode:
-   ```bash
-   npm run install:all
-   npm run dev
-   ```
