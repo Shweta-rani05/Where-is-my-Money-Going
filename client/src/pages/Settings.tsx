@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, Shield, Palette, AlertTriangle, Save, Eye, EyeOff, Moon, Sun } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import { authService } from '../services/auth.service';
 import toast from 'react-hot-toast';
 
@@ -31,7 +30,6 @@ type PasswordFields = z.infer<typeof passwordSchema>;
 
 export const Settings: React.FC = () => {
   const { user, updateUser, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -42,7 +40,7 @@ export const Settings: React.FC = () => {
   const {
     register: registerProfile,
     handleSubmit: handleProfileSubmit,
-    formState: { errors: profileErrors, isSubmitting: isProfileSubmitting }
+    formState: { errors: profileErrors, isSubmitting: isProfileSubmitting, isDirty: isProfileDirty }
   } = useForm<ProfileFields>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -56,9 +54,10 @@ export const Settings: React.FC = () => {
     register: registerPassword,
     handleSubmit: handlePasswordSubmit,
     reset: resetPassword,
-    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting }
+    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting, isValid: isPasswordValid, isDirty: isPasswordDirty }
   } = useForm<PasswordFields>({
     resolver: zodResolver(passwordSchema),
+    mode: 'onChange',
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' }
   });
 
@@ -66,7 +65,7 @@ export const Settings: React.FC = () => {
     try {
       const updatedUser = await authService.updateProfile({ name: data.name, email: data.email });
       updateUser(updatedUser);
-      toast.success('Profile updated!');
+      toast.success('Profile updated successfully!');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update profile.');
     }
@@ -99,9 +98,9 @@ export const Settings: React.FC = () => {
 
   // Shared input class generator
   const inputClass = (hasError: boolean) =>
-    `w-full px-4 py-3 rounded-xl border bg-background-custom text-text-custom text-sm focus:outline-none focus:ring-2 transition-all ${
+    `w-full px-4 py-2.5 rounded-xl border bg-background-custom text-text-custom text-sm focus:outline-none focus:ring-2 transition-all ${
       hasError
-        ? 'border-rose-500 focus:ring-rose-500/20'
+        ? 'border-rose-500/50 focus:ring-rose-500/20 focus:border-rose-500'
         : 'border-border-custom focus:ring-primary/20 focus:border-primary'
     }`;
 
@@ -115,214 +114,208 @@ export const Settings: React.FC = () => {
         .slice(0, 2)
     : '?';
 
+  const memberSinceDate = user?.createdAt 
+    ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) 
+    : '—';
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8 pb-12 w-full animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-text-muted">Manage your profile, security, and preferences.</p>
+      <div className="flex flex-col gap-1.5 pb-2">
+        <h1 className="text-3xl font-bold tracking-tight text-text-custom">Settings</h1>
+        <p className="text-text-muted">Manage your personal information, security, and preferences.</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="space-y-8">
+        
         {/* ──────────── 1. Profile Section ──────────── */}
-        <div className="p-6 rounded-2xl bg-card-custom border border-border-custom shadow-sm space-y-5">
-          <h3 className="font-bold text-lg text-text-custom flex items-center gap-2">
-            <User className="w-5 h-5 text-primary" />
-            Profile
-          </h3>
+        <div className="border border-border-custom rounded-2xl bg-card-custom shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 md:p-8 flex-1">
+            <h3 className="font-bold text-lg text-text-custom mb-1">Profile</h3>
+            <p className="text-sm text-text-muted mb-8">
+              Update your basic profile information and email address.
+            </p>
 
-          {/* Avatar Initials */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl font-bold select-none">
-              {initials}
+            <div className="flex items-center gap-5 mb-8">
+              <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl font-bold select-none shadow-inner">
+                {initials}
+              </div>
+              <div>
+                <p className="font-semibold text-text-custom text-lg">{user?.name || 'User'}</p>
+                <p className="text-sm text-text-muted mb-1">{user?.email}</p>
+                <p className="text-xs text-text-muted/70 font-medium">
+                  Member since {memberSinceDate}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-semibold text-text-custom">{user?.name || 'User'}</p>
-              <p className="text-xs text-text-muted">{user?.email}</p>
-              <p className="text-[10px] text-text-muted mt-0.5">
-                Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : '—'}
-              </p>
-            </div>
+
+            <form id="profile-form" onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-5">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-text-custom mb-2">Display Name</label>
+                  <input type="text" {...registerProfile('name')} className={inputClass(!!profileErrors.name)} placeholder="John Doe" />
+                  {profileErrors.name && <span className="text-xs text-rose-500 mt-1.5 block font-medium">{profileErrors.name.message}</span>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-custom mb-2">Email Address</label>
+                  <input type="email" {...registerProfile('email')} className={inputClass(!!profileErrors.email)} placeholder="john@example.com" />
+                  {profileErrors.email && <span className="text-xs text-rose-500 mt-1.5 block font-medium">{profileErrors.email.message}</span>}
+                </div>
+              </div>
+            </form>
           </div>
-
-          <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">Name</label>
-              <input type="text" {...registerProfile('name')} className={inputClass(!!profileErrors.name)} />
-              {profileErrors.name && <span className="text-xs text-rose-500 mt-1 block">{profileErrors.name.message}</span>}
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">Email</label>
-              <input type="email" {...registerProfile('email')} className={inputClass(!!profileErrors.email)} />
-              {profileErrors.email && <span className="text-xs text-rose-500 mt-1 block">{profileErrors.email.message}</span>}
-            </div>
+          
+          <div className="px-6 md:px-8 py-4 bg-background-custom border-t border-border-custom flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-text-muted">
+              Please use a valid email address as it may be used for notifications.
+            </p>
             <button
+              form="profile-form"
               type="submit"
-              disabled={isProfileSubmitting}
-              className="w-full py-3 px-4 rounded-xl bg-primary hover:bg-opacity-95 text-white text-sm font-semibold shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 select-none"
+              disabled={isProfileSubmitting || !isProfileDirty}
+              className="w-full sm:w-auto py-2.5 px-6 rounded-xl bg-text-custom text-background-custom text-sm font-semibold shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95"
             >
-              <Save className="w-4 h-4" />
               {isProfileSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
-          </form>
+          </div>
         </div>
 
         {/* ──────────── 2. Change Password ──────────── */}
-        <div className="p-6 rounded-2xl bg-card-custom border border-border-custom shadow-sm space-y-5">
-          <h3 className="font-bold text-lg text-text-custom flex items-center gap-2">
-            <Shield className="w-5 h-5 text-amber-500" />
-            Change Password
-          </h3>
+        <div className="border border-border-custom rounded-2xl bg-card-custom shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 md:p-8 flex-1">
+            <h3 className="font-bold text-lg text-text-custom mb-1">Security</h3>
+            <p className="text-sm text-text-muted mb-8">
+              Update your password to keep your account secure.
+            </p>
 
-          <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">Current Password</label>
-              <div className="relative">
-                <input
-                  type={showCurrentPw ? 'text' : 'password'}
-                  {...registerPassword('currentPassword')}
-                  className={inputClass(!!passwordErrors.currentPassword)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPw(!showCurrentPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-custom transition-colors cursor-pointer"
-                >
-                  {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            <form id="password-form" onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-5 max-w-xl">
+              <div>
+                <label className="block text-sm font-medium text-text-custom mb-2">Current Password</label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPw ? 'text' : 'password'}
+                    {...registerPassword('currentPassword')}
+                    className={inputClass(!!passwordErrors.currentPassword)}
+                    placeholder="Enter current password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPw(!showCurrentPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-custom transition-colors cursor-pointer"
+                    tabIndex={-1}
+                  >
+                    {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {passwordErrors.currentPassword && <span className="text-xs text-rose-500 mt-1.5 block font-medium">{passwordErrors.currentPassword.message}</span>}
               </div>
-              {passwordErrors.currentPassword && <span className="text-xs text-rose-500 mt-1 block">{passwordErrors.currentPassword.message}</span>}
-            </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">New Password</label>
-              <div className="relative">
-                <input
-                  type={showNewPw ? 'text' : 'password'}
-                  {...registerPassword('newPassword')}
-                  className={inputClass(!!passwordErrors.newPassword)}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPw(!showNewPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-custom transition-colors cursor-pointer"
-                >
-                  {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+              <div className="grid md:grid-cols-2 gap-6 pt-2">
+                <div>
+                  <label className="block text-sm font-medium text-text-custom mb-2">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPw ? 'text' : 'password'}
+                      {...registerPassword('newPassword')}
+                      className={inputClass(!!passwordErrors.newPassword)}
+                      placeholder="At least 6 characters"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPw(!showNewPw)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-custom transition-colors cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {passwordErrors.newPassword && <span className="text-xs text-rose-500 mt-1.5 block font-medium">{passwordErrors.newPassword.message}</span>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-custom mb-2">Confirm Password</label>
+                  <input
+                    type="password"
+                    {...registerPassword('confirmPassword')}
+                    className={inputClass(!!passwordErrors.confirmPassword)}
+                    placeholder="Repeat new password"
+                  />
+                  {passwordErrors.confirmPassword && <span className="text-xs text-rose-500 mt-1.5 block font-medium">{passwordErrors.confirmPassword.message}</span>}
+                </div>
               </div>
-              {passwordErrors.newPassword && <span className="text-xs text-rose-500 mt-1 block">{passwordErrors.newPassword.message}</span>}
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-text-muted mb-1.5 uppercase tracking-wider">Confirm New Password</label>
-              <input
-                type="password"
-                {...registerPassword('confirmPassword')}
-                className={inputClass(!!passwordErrors.confirmPassword)}
-              />
-              {passwordErrors.confirmPassword && <span className="text-xs text-rose-500 mt-1 block">{passwordErrors.confirmPassword.message}</span>}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isPasswordSubmitting}
-              className="w-full py-3 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 select-none"
-            >
-              <Shield className="w-4 h-4" />
-              {isPasswordSubmitting ? 'Changing...' : 'Change Password'}
-            </button>
-          </form>
-        </div>
-
-        {/* ──────────── 3. Appearance ──────────── */}
-        <div className="p-6 rounded-2xl bg-card-custom border border-border-custom shadow-sm space-y-5">
-          <h3 className="font-bold text-lg text-text-custom flex items-center gap-2">
-            <Palette className="w-5 h-5 text-violet-500" />
-            Appearance
-          </h3>
-
-          <div className="flex items-center justify-between p-4 rounded-xl border border-border-custom/50 bg-background-custom">
-            <div>
-              <p className="font-semibold text-sm text-text-custom">Theme Mode</p>
-              <p className="text-xs text-text-muted mt-0.5">
-                Currently using <span className="font-medium capitalize">{theme}</span> mode
-              </p>
-            </div>
-            <button
-              onClick={toggleTheme}
-              className="relative w-14 h-8 rounded-full transition-colors duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30"
-              style={{
-                backgroundColor: theme === 'dark' ? 'var(--color-primary)' : '#d1d5db'
-              }}
-            >
-              <div
-                className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center"
-                style={{
-                  transform: theme === 'dark' ? 'translateX(28px)' : 'translateX(4px)'
-                }}
-              >
-                {theme === 'dark' ? (
-                  <Moon className="w-3.5 h-3.5 text-indigo-500" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5 text-amber-500" />
-                )}
-              </div>
-            </button>
+            </form>
           </div>
 
-          <p className="text-xs text-text-muted">
-            Toggle between light and dark modes. Your preference is saved automatically.
-          </p>
-        </div>
-
-        {/* ──────────── 4. Danger Zone ──────────── */}
-        <div className="p-6 rounded-2xl bg-card-custom border border-rose-500/30 shadow-sm space-y-5">
-          <h3 className="font-bold text-lg text-rose-500 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5" />
-            Danger Zone
-          </h3>
-
-          <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5">
-            <p className="font-semibold text-sm text-text-custom mb-1">Delete Account</p>
-            <p className="text-xs text-text-muted mb-4">
-              Permanently delete your account and all associated data including transactions, budgets, and savings goals. This action is irreversible.
+          <div className="px-6 md:px-8 py-4 bg-background-custom border-t border-border-custom flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-text-muted">
+              You will remain logged in on this device after changing your password.
             </p>
             <button
-              onClick={() => setShowDeleteDialog(true)}
-              className="py-2.5 px-5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold shadow-md transition-all cursor-pointer select-none"
+              form="password-form"
+              type="submit"
+              disabled={isPasswordSubmitting || !isPasswordValid || !isPasswordDirty}
+              className="w-full sm:w-auto py-2.5 px-6 rounded-xl bg-text-custom text-background-custom text-sm font-semibold shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-95"
             >
-              Delete My Account
+              {isPasswordSubmitting ? 'Updating...' : 'Update Password'}
             </button>
           </div>
         </div>
+
+        {/* ──────────── 3. Danger Zone ──────────── */}
+        <div className="border border-rose-500/20 rounded-2xl bg-card-custom shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 md:p-8 flex-1">
+            <h3 className="font-bold text-lg text-rose-500 mb-1 flex items-center gap-2">
+              Danger Zone
+            </h3>
+            <p className="text-sm text-text-muted mb-6">
+              Permanently delete your account and all associated data from our servers.
+            </p>
+
+            <div className="p-5 rounded-xl border border-rose-500/20 bg-rose-500/5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-sm text-text-custom mb-1">Delete Personal Account</p>
+                <p className="text-xs text-text-muted max-w-md">
+                  This action is irreversible. All transactions, budgets, and savings goals will be immediately expunged.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                className="whitespace-nowrap py-2.5 px-5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold shadow-sm transition-all cursor-pointer select-none active:scale-95"
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+        
       </div>
 
       {/* ──────────── Delete Confirmation Dialog ──────────── */}
       {showDeleteDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div onClick={() => setShowDeleteDialog(false)} className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative w-full max-w-sm p-6 rounded-2xl bg-card-custom shadow-2xl z-10 text-text-custom border border-border-custom text-center">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-              <AlertTriangle className="w-7 h-7 text-rose-500" />
+          <div className="relative w-full max-w-sm p-7 rounded-3xl bg-card-custom shadow-2xl z-10 border border-border-custom text-center animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shadow-inner">
+              <AlertTriangle className="w-6 h-6 text-rose-500" />
             </div>
-            <h3 className="text-lg font-bold mb-2">Delete Account?</h3>
-            <p className="text-sm text-text-muted mb-6">
-              This will permanently remove your account, all transactions, budgets, and goals. You cannot undo this.
+            <h3 className="text-xl font-bold mb-2 text-text-custom">Are you absolutely sure?</h3>
+            <p className="text-sm text-text-muted mb-8 leading-relaxed">
+              This will permanently delete <span className="font-semibold text-text-custom">{user?.email}</span> and remove all data from our servers. You cannot undo this action.
             </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteDialog(false)}
-                disabled={isDeleting}
-                className="flex-1 py-2.5 px-4 rounded-xl border border-border-custom hover:bg-border-custom/30 text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
-              >
-                Cancel
-              </button>
+            <div className="flex flex-col gap-3">
               <button
                 onClick={handleDeleteAccount}
                 disabled={isDeleting}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold shadow-md transition-all cursor-pointer disabled:opacity-50"
+                className="w-full py-3 px-4 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
               >
-                {isDeleting ? 'Deleting...' : 'Delete Forever'}
+                {isDeleting ? 'Deleting...' : 'Yes, delete my account'}
+              </button>
+              <button
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={isDeleting}
+                className="w-full py-3 px-4 rounded-xl border border-border-custom hover:bg-border-custom/50 text-text-custom text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
+              >
+                Cancel
               </button>
             </div>
           </div>
