@@ -76,4 +76,7 @@ const TransactionSchema = new Schema<ITransaction>(
   }
 );
 
+// Compound index for optimizing paginated fetches by user and sorted by date
+TransactionSchema.index({ userId: 1, date: -1 });
+
 export const Transaction = model<ITransaction>('Transaction', TransactionSchema);

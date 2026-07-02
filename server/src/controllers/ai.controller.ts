@@ -2,7 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { Transaction } from '../models/Transaction';
 import { Budget } from '../models/Budget';
 import { Goal } from '../models/Goal';
-
+import { AIHistory } from '../models/AIHistory';
+import { GoogleGenAI } from '@google/genai';
+import { withRetry } from '../services/llm.service';
 // ────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────
@@ -12,9 +14,11 @@ interface FinancialSummary {
   netBalance: number;
   transactionCount: number;
   topCategories: { category: string; total: number }[];
+  topMerchants: { merchant: string; total: number }[];
   budgetStatuses: { category: string; limit: number; spent: number; percentage: number }[];
   goalStatuses: { title: string; target: number; saved: number; percentage: number }[];
   recentTransactions: { description: string; amount: number; type: string; category: string; date: string }[];
+  anomalies: string[];
 }
 
 // ────────────────────────────────────────────
@@ -40,16 +44,43 @@ async function buildFinancialSummary(userId: string): Promise<FinancialSummary> 
 
   // Top spending categories
   const categoryMap: Record<string, number> = {};
+  const merchantMap: Record<string, number> = {};
+  const amountFrequency: Record<number, number> = {};
+
   transactions
     .filter((t: any) => t.type === 'expense')
     .forEach((t: any) => {
+      // Categories
       categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
+      
+      // Merchants (using notes as a proxy for merchant from OCR)
+      if (t.notes) {
+        const merchant = t.notes.split(' ')[0].substring(0, 15).toUpperCase();
+        merchantMap[merchant] = (merchantMap[merchant] || 0) + t.amount;
+      }
+
+      // Track recurring amounts for anomaly detection
+      amountFrequency[t.amount] = (amountFrequency[t.amount] || 0) + 1;
     });
 
   const topCategories = Object.entries(categoryMap)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([category, total]) => ({ category, total }));
+
+  const topMerchants = Object.entries(merchantMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([merchant, total]) => ({ merchant, total }));
+
+  // Detect simple anomalies (recurring identical large expenses)
+  const anomalies: string[] = [];
+  Object.entries(amountFrequency).forEach(([amountStr, count]) => {
+    const amount = Number(amountStr);
+    if (count >= 2 && amount > 1000) {
+      anomalies.push(`Recurring large expense detected: ₹${amount} was spent ${count} times.`);
+    }
+  });
 
   // Budget statuses
   const budgetStatuses = budgets.map((b: any) => {
@@ -72,13 +103,13 @@ async function buildFinancialSummary(userId: string): Promise<FinancialSummary> 
     percentage: g.targetAmount > 0 ? Math.round((g.savedAmount / g.targetAmount) * 100) : 0
   }));
 
-  // Recent transactions (last 5)
-  const recentTransactions = transactions.slice(0, 5).map((t: any) => ({
-    description: t.description,
+  // Recent transactions (expand to last 20 for better LLM context)
+  const recentTransactions = transactions.slice(0, 20).map((t: any) => ({
+    description: t.notes || t.description || 'Unknown',
     amount: t.amount,
     type: t.type,
     category: t.category,
-    date: new Date(t.date).toLocaleDateString('en-IN')
+    date: new Date(t.date).toISOString().split('T')[0]
   }));
 
   return {
@@ -87,9 +118,11 @@ async function buildFinancialSummary(userId: string): Promise<FinancialSummary> 
     netBalance: totalIncome - totalExpenses,
     transactionCount: transactions.length,
     topCategories,
+    topMerchants,
     budgetStatuses,
     goalStatuses,
-    recentTransactions
+    recentTransactions,
+    anomalies
   };
 }
 
@@ -248,35 +281,36 @@ async function callGeminiAPI(message: string, summary: FinancialSummary): Promis
   if (!apiKey) return null;
 
   try {
+    const ai = new GoogleGenAI({ apiKey });
+
     const systemPrompt = `You are a helpful personal finance assistant for the "Where Is My Money Going?" app. 
-The user's financial data from the last 30 days:
+The user recently uploaded bank statements. Here is their financial data from the last 30 days:
 - Total Income: ₹${summary.totalIncome.toLocaleString()}
 - Total Expenses: ₹${summary.totalExpenses.toLocaleString()}  
 - Net Balance: ₹${summary.netBalance.toLocaleString()}
 - Transaction Count: ${summary.transactionCount}
 - Top Spending Categories: ${summary.topCategories.map(c => `${c.category}: ₹${c.total.toLocaleString()}`).join(', ') || 'None'}
+- Top Merchants: ${summary.topMerchants.map(m => `${m.merchant}: ₹${m.total.toLocaleString()}`).join(', ') || 'None'}
+- Spending Anomalies detected: ${summary.anomalies.join(' | ') || 'None'}
 - Budgets: ${summary.budgetStatuses.map(b => `${b.category}: ₹${b.spent.toLocaleString()}/₹${b.limit.toLocaleString()} (${b.percentage}%)`).join(', ') || 'None set'}
 - Savings Goals: ${summary.goalStatuses.map(g => `${g.title}: ₹${g.saved.toLocaleString()}/₹${g.target.toLocaleString()} (${g.percentage}%)`).join(', ') || 'None set'}
 
-Provide concise, actionable, and encouraging financial advice. Use markdown formatting and emojis. Keep responses under 300 words. Use ₹ for currency.`;
+Here are their last 20 transactions for context (Merchant/Desc, Amount, Category, Date):
+${summary.recentTransactions.map(t => `${t.description}: ₹${t.amount} (${t.category}) on ${t.date}`).join('\n')}
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ parts: [{ text: message }] }]
-        })
-      }
+Provide concise, actionable, and encouraging financial advice based on the user's prompt. Answer specific questions about merchants (like Zomato, Swiggy) using the transaction list above. Use markdown formatting and emojis. Keep responses under 300 words. Use ₹ for currency.`;
+
+    const response = await withRetry(() => 
+      ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [message],
+        config: {
+          systemInstruction: systemPrompt
+        }
+      })
     );
 
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    return text || null;
+    return response.text || null;
   } catch (error) {
     console.error('[AI] Gemini API call failed:', error);
     return null;
@@ -316,6 +350,13 @@ export const chatWithAI = async (req: Request, res: Response, next: NextFunction
       response = generateRuleBasedResponse(message.trim(), summary);
     }
 
+    // Save to history
+    await AIHistory.create({
+      userId,
+      prompt: message.trim(),
+      response
+    });
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -327,3 +368,135 @@ export const chatWithAI = async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 };
+
+// ────────────────────────────────────────────
+// Controller: GET /api/ai/history
+// ────────────────────────────────────────────
+/**
+ * @route   GET /api/ai/history
+ * @desc    Get user's AI chat history
+ * @access  Private
+ */
+export const getChatHistory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      res.status(401).json({ status: 'fail', message: 'Session unauthorized' });
+      return;
+    }
+
+    const history = await AIHistory.find({ userId }).sort({ createdAt: 1 }).lean();
+
+    res.status(200).json({
+      status: 'success',
+      data: history
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ────────────────────────────────────────────
+// AI Insights Engine
+// ────────────────────────────────────────────
+
+async function generateGeminiInsights(summary: FinancialSummary): Promise<any | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+
+    const systemPrompt = `You are an expert financial advisor for the "Where Is My Money Going?" app.
+The user's financial data from the last 30 days:
+- Total Income: ₹${summary.totalIncome}
+- Total Expenses: ₹${summary.totalExpenses}
+- Net Balance: ₹${summary.netBalance}
+- Top Categories: ${JSON.stringify(summary.topCategories)}
+- Top Merchants: ${JSON.stringify(summary.topMerchants)}
+- Anomalies: ${JSON.stringify(summary.anomalies)}
+- Budgets: ${JSON.stringify(summary.budgetStatuses)}
+- Goals: ${JSON.stringify(summary.goalStatuses)}
+
+Analyze this data and return a JSON object exactly with these 4 keys (no markdown formatting, just pure JSON):
+{
+  "analyzeSpending": "A short 2-3 sentence analysis of their spending habits.",
+  "budgetSuggestions": "A short 2-3 sentence suggestion on how to adjust or set budgets.",
+  "expenseTrends": "A short 2-3 sentence observation about their expense trends.",
+  "savingsTips": "A short 2-3 sentence tip to help them save more for their goals."
+}`;
+
+    const response = await withRetry(() => 
+      ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [systemPrompt],
+        config: {
+          systemInstruction: "You must return valid JSON only.",
+          responseMimeType: "application/json"
+        }
+      })
+    );
+
+    if (response.text) {
+      return JSON.parse(response.text);
+    }
+    return null;
+  } catch (error) {
+    console.error('[AI] Gemini Insights generation failed:', error);
+    return null;
+  }
+}
+
+function generateRuleBasedInsights(summary: FinancialSummary): any {
+  return {
+    analyzeSpending: summary.totalExpenses > summary.totalIncome 
+      ? `You spent ₹${summary.totalExpenses.toLocaleString()}, which is more than your income of ₹${summary.totalIncome.toLocaleString()}. Try to cut down on discretionary expenses.`
+      : `You spent ₹${summary.totalExpenses.toLocaleString()} this month, keeping your expenses below your income. Great job maintaining a surplus!`,
+      
+    budgetSuggestions: summary.budgetStatuses.length === 0
+      ? "You haven't set any budgets yet. Consider setting a budget for your top spending categories to keep expenses in check."
+      : `You have ${summary.budgetStatuses.filter(b => b.percentage >= 100).length} budgets that are over the limit. Review these categories and adjust your spending or limits accordingly.`,
+      
+    expenseTrends: summary.topCategories.length > 0
+      ? `Your highest expense category is ${summary.topCategories[0].category} at ₹${summary.topCategories[0].total.toLocaleString()}. Monitoring this can significantly reduce overall spend.`
+      : "You haven't logged enough transactions this month to identify major expense trends.",
+      
+    savingsTips: summary.goalStatuses.length > 0
+      ? `You are making progress on your goals! Consider automating a transfer of ₹${(summary.totalIncome * 0.1).toLocaleString()} (10% of income) to reach them faster.`
+      : "Setting a specific savings goal, like an Emergency Fund, can motivate you to save more consistently."
+  };
+}
+
+/**
+ * @route   GET /api/ai/insights
+ * @desc    Get structured AI financial insights
+ * @access  Private
+ */
+export const getInsights = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      res.status(401).json({ status: 'fail', message: 'Session unauthorized' });
+      return;
+    }
+
+    const summary = await buildFinancialSummary(userId.toString());
+    
+    let insights = await generateGeminiInsights(summary);
+    
+    if (!insights) {
+      insights = generateRuleBasedInsights(summary);
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: insights
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+

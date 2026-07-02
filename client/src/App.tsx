@@ -11,6 +11,8 @@ import Transactions from './pages/Transactions';
 import Budgets from './pages/Budgets';
 import Goals from './pages/Goals';
 import AIChat from './pages/AIChat';
+import AIInsights from './pages/AIInsights';
+import StatementAnalytics from './pages/StatementAnalytics';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
@@ -32,6 +34,8 @@ export const App: React.FC = () => {
           <Route path="/budgets" element={<Budgets />} />
           <Route path="/goals" element={<Goals />} />
           <Route path="/ai-chat" element={<AIChat />} />
+          <Route path="/ai-insights" element={<AIInsights />} />
+          <Route path="/statements" element={<StatementAnalytics />} />
           <Route path="/settings" element={<Settings />} />
           
           {/* Catch-all fallback inside the main panel layout */}

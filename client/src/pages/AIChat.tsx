@@ -39,6 +39,35 @@ export const AIChat: React.FC = () => {
     scrollToBottom();
   }, [messages, isLoading]);
 
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        let history = await aiService.getHistory();
+        const filteredHistory = history.map(({ _content, ...rest }: any) => rest);
+        if (filteredHistory.length > 0) {
+          const loadedMessages: Message[] = filteredHistory.flatMap(h => [
+            {
+              id: `user-${h._id}`,
+              sender: 'user',
+              text: h.prompt,
+              timestamp: new Date(h.createdAt)
+            },
+            {
+              id: `ai-${h._id}`,
+              sender: 'ai',
+              text: h.response,
+              timestamp: new Date(h.createdAt)
+            }
+          ]);
+          setMessages(prev => [...prev, ...loadedMessages]);
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    };
+    fetchHistory();
+  }, []);
+
   const handleSendMessage = async (textToSend: string) => {
     const trimmed = textToSend.trim();
     if (!trimmed) return;
@@ -85,10 +114,7 @@ export const AIChat: React.FC = () => {
 
   // Helper to parse simple markdown bold, lists, and headers in chat message text
   const renderMessageContent = (text: string) => {
-    return text.split('\n').map((line, idx) => {
-      let content: React.ReactNode = line;
-
-      // Handle bullet points
+    return text.split('\n').map((line, idx) => {      // Handle bullet points
       const bulletMatch = line.match(/^(\s*)[•\-\*]\s+(.*)$/);
       const isBullet = !!bulletMatch;
 

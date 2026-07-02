@@ -2,14 +2,17 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import mongoSanitize from 'express-mongo-sanitize';
 import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables IMMEDIATELY
+dotenv.config({ path: path.join(__dirname, '../.env'), override: true });
+
 import { connectDB } from './config/db';
 import apiRouter from './routes';
 import { notFound } from './middlewares/notFound';
 import { errorHandler } from './middlewares/errorHandler';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -25,6 +28,7 @@ app.use(cors({
 }));
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(mongoSanitize());
 
 // Mount API routes
 app.use('/api', apiRouter);

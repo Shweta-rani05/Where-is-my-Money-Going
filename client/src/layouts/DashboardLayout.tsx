@@ -14,7 +14,9 @@ import {
   Moon,
   Menu,
   X,
-  User
+  User,
+  Sparkles,
+  FileText
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -35,7 +37,9 @@ export const DashboardLayout: React.FC = () => {
     { name: 'Transactions', path: '/transactions', icon: Receipt },
     { name: 'Budgets', path: '/budgets', icon: Wallet },
     { name: 'Savings Goals', path: '/goals', icon: PiggyBank },
+    { name: 'Statement Analytics', path: '/statements', icon: FileText },
     { name: 'AI Chat', path: '/ai-chat', icon: Bot },
+    { name: 'AI Insights', path: '/ai-insights', icon: Sparkles },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 

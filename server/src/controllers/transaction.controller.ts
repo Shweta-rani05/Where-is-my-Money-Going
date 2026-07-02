@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { Transaction } from '../models/Transaction';
 import { Budget } from '../models/Budget';
+import { summaryCache } from '../utils/cache';
 
 
 
@@ -29,6 +30,9 @@ export const createTransaction = async (req: Request, res: Response, next: NextF
       notes,
       date: date || new Date()
     });
+
+    // Invalidate dashboard cache
+    summaryCache.delete(`summary_${userId}`);
 
     res.status(201).json({
       status: 'success',
@@ -146,6 +150,9 @@ export const updateTransaction = async (req: Request, res: Response, next: NextF
       { new: true, runValidators: true }
     );
 
+    // Invalidate dashboard cache
+    summaryCache.delete(`summary_${userId}`);
+
     if (!transaction) {
       res.status(404).json({
         status: 'fail',
@@ -187,6 +194,9 @@ export const deleteTransaction = async (req: Request, res: Response, next: NextF
       return;
     }
 
+    // Invalidate dashboard cache
+    summaryCache.delete(`summary_${userId}`);
+
     res.status(200).json({
       status: 'success',
       message: 'Transaction deleted successfully.'
@@ -206,6 +216,17 @@ export const getTransactionSummary = async (req: Request, res: Response, next: N
     const userId = req.user?._id;
     if (!userId) {
       res.status(401).json({ status: 'fail', message: 'Session unauthorized' });
+      return;
+    }
+
+    const cacheKey = `summary_${userId}`;
+    const cachedData = summaryCache.get(cacheKey);
+    
+    if (cachedData) {
+      res.status(200).json({
+        status: 'success',
+        data: cachedData
+      });
       return;
     }
 
@@ -314,19 +335,24 @@ export const getTransactionSummary = async (req: Request, res: Response, next: N
       }
     ]);
 
+    const responseData = {
+      totals: {
+        income,
+        expenses,
+        savings,
+        remainingBudget
+      },
+      cashFlowTrend,
+      categoryDistribution
+    };
+
+    // Cache for 5 minutes
+    summaryCache.set(cacheKey, responseData, 300);
+
     // Format final response
     res.status(200).json({
       status: 'success',
-      data: {
-        totals: {
-          income,
-          expenses,
-          savings,
-          remainingBudget
-        },
-        cashFlowTrend,
-        categoryDistribution
-      }
+      data: responseData
     });
   } catch (error) {
     next(error);
