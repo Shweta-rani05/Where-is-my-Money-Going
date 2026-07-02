@@ -63,7 +63,7 @@ export const Dashboard: React.FC = () => {
   }
 
   // Format stats card metrics with fallbacks
-  const totals = summary?.totals || { income: 0, expenses: 0, savings: 0, remainingBudget: 50000 };
+  const totals = summary?.totals || { income: 0, expenses: 0, savings: 0, remainingBudget: 0, hasBudget: false, budgetLimit: 0 };
   
   // Format category distribution to inject palette colors
   const categoryData = summary
@@ -111,13 +111,56 @@ export const Dashboard: React.FC = () => {
           icon={PiggyBank}
           type="savings"
         />
-        <StatsCard
-          title="Remaining Budget"
-          value={`₹${totals.remainingBudget.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-          changeText="Target: ₹50,000"
-          icon={Wallet}
-          type="budget"
-        />
+        {totals.hasBudget ? (
+          <div className="p-6 rounded-2xl bg-card-custom border border-border-custom shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group shadow-amber-500/5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="space-y-1">
+                <span className="text-sm font-medium text-text-muted select-none">
+                  Remaining Budget
+                </span>
+                <h3 className="text-2xl font-bold tracking-tight text-text-custom">
+                  ₹{totals.remainingBudget.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </h3>
+              </div>
+              <div className="p-3 rounded-xl border transition-all duration-300 group-hover:scale-110 bg-amber-500/10 text-amber-500 border-amber-500/20">
+                <Wallet className="w-5 h-5" />
+              </div>
+            </div>
+
+            <div className="space-y-2 mt-auto">
+              <div className="flex justify-between text-xs font-medium">
+                <span className="text-text-muted">Spent: ₹{totals.expenses.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                <span className="text-text-muted">Limit: ₹{totals.budgetLimit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div className="h-1.5 w-full bg-border-custom/50 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full rounded-full transition-all duration-1000 ${
+                    (totals.expenses / totals.budgetLimit) >= 0.9 ? 'bg-rose-500' : 
+                    (totals.expenses / totals.budgetLimit) >= 0.75 ? 'bg-amber-500' : 'bg-emerald-500'
+                  }`}
+                  style={{ width: `${Math.min(100, (totals.expenses / totals.budgetLimit) * 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-6 rounded-2xl bg-card-custom border border-border-custom shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-center gap-2 shadow-amber-500/5">
+            <span className="text-sm font-medium text-text-muted select-none">
+              Remaining Budget
+            </span>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold tracking-tight text-text-muted mb-1">
+                  No budget set
+                </h3>
+                <a href="/budgets" className="text-xs text-primary hover:underline">Create a budget &rarr;</a>
+              </div>
+              <div className="p-2 rounded-xl border bg-amber-500/10 text-amber-500 border-amber-500/20">
+                <Wallet className="w-5 h-5" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Graphical Dashboards Section */}

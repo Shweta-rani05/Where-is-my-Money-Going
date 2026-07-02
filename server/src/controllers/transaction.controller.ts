@@ -262,6 +262,7 @@ export const getTransactionSummary = async (req: Request, res: Response, next: N
 
     // Sum total limits set in Budgets table
     const budgets = await Budget.find({ userId });
+    const hasBudget = budgets.length > 0;
     const budgetLimit = budgets.reduce((sum, b) => sum + b.limit, 0) || 50000;
     const remainingBudget = Math.max(0, budgetLimit - expenses);
 
@@ -340,7 +341,9 @@ export const getTransactionSummary = async (req: Request, res: Response, next: N
         income,
         expenses,
         savings,
-        remainingBudget
+        remainingBudget,
+        hasBudget,
+        budgetLimit
       },
       cashFlowTrend,
       categoryDistribution

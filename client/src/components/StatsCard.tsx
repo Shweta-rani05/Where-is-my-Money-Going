@@ -51,13 +51,15 @@ export const StatsCard: React.FC<StatsCardProps> = ({
           <h3 className="text-2xl font-bold tracking-tight text-text-custom">
             {value}
           </h3>
-          <p className="text-xs font-medium flex items-center gap-1">
-            <span className={isPositive ? 'text-emerald-500' : 'text-rose-500'}>
-              {changeText.startsWith('+') || changeText.startsWith('-') ? '' : isPositive ? '+' : '-'}
-              {changeText}
-            </span>
-            <span className="text-text-muted">from last month</span>
-          </p>
+          {changeText && (
+            <p className="text-xs font-medium flex items-center gap-1">
+              <span className={isPositive ? 'text-emerald-500' : 'text-rose-500'}>
+                {changeText.startsWith('+') || changeText.startsWith('-') ? '' : isPositive ? '+' : '-'}
+                {changeText}
+              </span>
+              <span className="text-text-muted">from last month</span>
+            </p>
+          )}
         </div>
       </div>
 

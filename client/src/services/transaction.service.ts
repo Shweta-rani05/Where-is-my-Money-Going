@@ -35,6 +35,8 @@ export interface TransactionSummary {
     expenses: number;
     savings: number;
     remainingBudget: number;
+    hasBudget: boolean;
+    budgetLimit: number;
   };
   cashFlowTrend: { name: string; Income: number; Expenses: number }[];
   categoryDistribution: { name: string; value: number }[];
