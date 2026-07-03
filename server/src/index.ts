@@ -23,7 +23,11 @@ connectDB();
 // Security and utility middleware configuration
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173', 
+    'https://where-is-my-money-going.vercel.app',
+    process.env.CORS_ORIGIN || ''
+  ].filter(Boolean),
   credentials: true
 }));
 app.use(morgan('dev'));
@@ -52,4 +56,4 @@ app.listen(port, () => {
   console.log(`[Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
 });
 
-// Trigger nodemon restart
+// Trigger nodemon restart 2
