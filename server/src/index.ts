@@ -30,10 +30,20 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(mongoSanitize());
 
+// Health check
+app.get('/', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Where Is My Money Going API is running 🚀',
+    status: 'OK',
+    version: '1.0.0'
+  });
+});
+
 // Mount API routes
 app.use('/api', apiRouter);
 
-// Fallback handlers for unhandled routes and uncaught middleware exceptions
+// Fallback handlers
 app.use(notFound);
 app.use(errorHandler);
 
