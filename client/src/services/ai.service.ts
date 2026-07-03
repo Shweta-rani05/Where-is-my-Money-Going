@@ -23,10 +23,10 @@ export interface HistoryResponse {
 }
 
 export interface AIInsights {
-  analyzeSpending: string;
-  budgetSuggestions: string;
-  expenseTrends: string;
-  savingsTips: string;
+  analyzeSpending: string[];
+  budgetSuggestions: string[];
+  expenseTrends: string[];
+  savingsTips: string[];
 }
 
 export interface InsightsResponse {

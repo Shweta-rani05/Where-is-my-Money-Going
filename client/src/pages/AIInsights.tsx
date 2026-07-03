@@ -60,9 +60,11 @@ export const AIInsights: React.FC = () => {
               </div>
               <h2 className="text-lg font-bold text-text-custom">Spending Analysis</h2>
             </div>
-            <p className="text-sm text-text-muted leading-relaxed">
-              {insights.analyzeSpending}
-            </p>
+            <ul className="text-sm text-text-muted leading-relaxed list-disc pl-5 space-y-1">
+              {Array.isArray(insights.analyzeSpending) ? insights.analyzeSpending.map((point, i) => (
+                <li key={i}>{point}</li>
+              )) : <li>{insights.analyzeSpending}</li>}
+            </ul>
           </div>
 
           {/* Budget Suggestions */}
@@ -73,9 +75,11 @@ export const AIInsights: React.FC = () => {
               </div>
               <h2 className="text-lg font-bold text-text-custom">Budget Suggestions</h2>
             </div>
-            <p className="text-sm text-text-muted leading-relaxed">
-              {insights.budgetSuggestions}
-            </p>
+            <ul className="text-sm text-text-muted leading-relaxed list-disc pl-5 space-y-1">
+              {Array.isArray(insights.budgetSuggestions) ? insights.budgetSuggestions.map((point, i) => (
+                <li key={i}>{point}</li>
+              )) : <li>{insights.budgetSuggestions}</li>}
+            </ul>
           </div>
 
           {/* Expense Trends */}
@@ -86,9 +90,11 @@ export const AIInsights: React.FC = () => {
               </div>
               <h2 className="text-lg font-bold text-text-custom">Expense Trends</h2>
             </div>
-            <p className="text-sm text-text-muted leading-relaxed">
-              {insights.expenseTrends}
-            </p>
+            <ul className="text-sm text-text-muted leading-relaxed list-disc pl-5 space-y-1">
+              {Array.isArray(insights.expenseTrends) ? insights.expenseTrends.map((point, i) => (
+                <li key={i}>{point}</li>
+              )) : <li>{insights.expenseTrends}</li>}
+            </ul>
           </div>
 
           {/* Savings Tips */}
@@ -99,9 +105,11 @@ export const AIInsights: React.FC = () => {
               </div>
               <h2 className="text-lg font-bold text-text-custom">Savings Tips</h2>
             </div>
-            <p className="text-sm text-text-muted leading-relaxed">
-              {insights.savingsTips}
-            </p>
+            <ul className="text-sm text-text-muted leading-relaxed list-disc pl-5 space-y-1">
+              {Array.isArray(insights.savingsTips) ? insights.savingsTips.map((point, i) => (
+                <li key={i}>{point}</li>
+              )) : <li>{insights.savingsTips}</li>}
+            </ul>
           </div>
         </div>
       ) : (

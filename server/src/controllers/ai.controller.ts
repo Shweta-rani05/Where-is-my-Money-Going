@@ -419,12 +419,12 @@ The user's financial data from the last 30 days:
 - Budgets: ${JSON.stringify(summary.budgetStatuses)}
 - Goals: ${JSON.stringify(summary.goalStatuses)}
 
-Analyze this data and return a JSON object exactly with these 4 keys (no markdown formatting, just pure JSON):
+Analyze this data and return a JSON object exactly with these 4 keys (where each value is an array of 2-3 short, actionable string bullet points):
 {
-  "analyzeSpending": "A short 2-3 sentence analysis of their spending habits.",
-  "budgetSuggestions": "A short 2-3 sentence suggestion on how to adjust or set budgets.",
-  "expenseTrends": "A short 2-3 sentence observation about their expense trends.",
-  "savingsTips": "A short 2-3 sentence tip to help them save more for their goals."
+  "analyzeSpending": ["Point 1...", "Point 2..."],
+  "budgetSuggestions": ["Point 1...", "Point 2..."],
+  "expenseTrends": ["Point 1...", "Point 2..."],
+  "savingsTips": ["Point 1...", "Point 2..."]
 }`;
 
     const response = await withRetry(() => 
@@ -451,20 +451,42 @@ Analyze this data and return a JSON object exactly with these 4 keys (no markdow
 function generateRuleBasedInsights(summary: FinancialSummary): any {
   return {
     analyzeSpending: summary.totalExpenses > summary.totalIncome 
-      ? `You spent ₹${summary.totalExpenses.toLocaleString()}, which is more than your income of ₹${summary.totalIncome.toLocaleString()}. Try to cut down on discretionary expenses.`
-      : `You spent ₹${summary.totalExpenses.toLocaleString()} this month, keeping your expenses below your income. Great job maintaining a surplus!`,
+      ? [
+          `You spent ₹${summary.totalExpenses.toLocaleString()}, which is more than your income of ₹${summary.totalIncome.toLocaleString()}.`,
+          `Try to cut down on discretionary expenses.`
+        ]
+      : [
+          `You spent ₹${summary.totalExpenses.toLocaleString()} this month, keeping your expenses below your income.`,
+          `Great job maintaining a surplus!`
+        ],
       
     budgetSuggestions: summary.budgetStatuses.length === 0
-      ? "You haven't set any budgets yet. Consider setting a budget for your top spending categories to keep expenses in check."
-      : `You have ${summary.budgetStatuses.filter(b => b.percentage >= 100).length} budgets that are over the limit. Review these categories and adjust your spending or limits accordingly.`,
+      ? [
+          "You haven't set any budgets yet.",
+          "Consider setting a budget for your top spending categories to keep expenses in check."
+        ]
+      : [
+          `You have ${summary.budgetStatuses.filter(b => b.percentage >= 100).length} budgets that are over the limit.`,
+          `Review these categories and adjust your spending or limits accordingly.`
+        ],
       
     expenseTrends: summary.topCategories.length > 0
-      ? `Your highest expense category is ${summary.topCategories[0].category} at ₹${summary.topCategories[0].total.toLocaleString()}. Monitoring this can significantly reduce overall spend.`
-      : "You haven't logged enough transactions this month to identify major expense trends.",
+      ? [
+          `Your highest expense category is ${summary.topCategories[0].category} at ₹${summary.topCategories[0].total.toLocaleString()}.`,
+          `Monitoring this can significantly reduce overall spend.`
+        ]
+      : [
+          "You haven't logged enough transactions this month to identify major expense trends."
+        ],
       
     savingsTips: summary.goalStatuses.length > 0
-      ? `You are making progress on your goals! Consider automating a transfer of ₹${(summary.totalIncome * 0.1).toLocaleString()} (10% of income) to reach them faster.`
-      : "Setting a specific savings goal, like an Emergency Fund, can motivate you to save more consistently."
+      ? [
+          `You are making progress on your goals!`,
+          `Consider automating a transfer of ₹${(summary.totalIncome * 0.1).toLocaleString()} (10% of income) to reach them faster.`
+        ]
+      : [
+          "Setting a specific savings goal, like an Emergency Fund, can motivate you to save more consistently."
+        ]
   };
 }
 

@@ -51,3 +51,5 @@ app.use(errorHandler);
 app.listen(port, () => {
   console.log(`[Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
 });
+
+// Trigger nodemon restart
