@@ -9,10 +9,12 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  Legend
+  Cell
 } from 'recharts';
-import { TrendingUp, TrendingDown, PiggyBank, Wallet } from 'lucide-react';
+import { 
+  TrendingUp, TrendingDown, PiggyBank, Wallet,
+  Home, ShoppingBag, Utensils, Plane, Car, Zap, Heart, GraduationCap, CircleDollarSign
+} from 'lucide-react';
 import StatsCard from '../components/StatsCard';
 import RecentTransactions from '../components/RecentTransactions';
 import BudgetAlerts from '../components/BudgetAlerts';
@@ -21,15 +23,83 @@ import { transactionService, type TransactionSummary } from '../services/transac
 import toast from 'react-hot-toast';
 
 const COLORS = [
-  '#6366f1', // Indigo
-  '#10b981', // Emerald
-  '#f59e0b', // Amber
-  '#ec4899', // Pink
-  '#8b5cf6', // Purple
-  '#3b82f6', // Blue
-  '#14b8a6', // Teal
-  '#6b7280'  // Gray
+  'var(--chart-1)', // Indigo
+  'var(--chart-2)', // Teal
+  'var(--chart-3)', // Amber
+  'var(--chart-4)', // Rose
+  'var(--chart-5)', // Sky Blue
 ];
+
+const CategoryIcon = ({ category, x, y }: { category: string, x: number, y: number }) => {
+  const getIcon = () => {
+    const name = category.toLowerCase();
+    if (name.includes('rent') || name.includes('home') || name.includes('house')) return Home;
+    if (name.includes('food') || name.includes('dining') || name.includes('restaurant')) return Utensils;
+    if (name.includes('travel') || name.includes('flight') || name.includes('plane')) return Plane;
+    if (name.includes('transport') || name.includes('train') || name.includes('bus') || name.includes('car')) return Car;
+    if (name.includes('shopping') || name.includes('clothes')) return ShoppingBag;
+    if (name.includes('health') || name.includes('medical')) return Heart;
+    if (name.includes('bill') || name.includes('utility') || name.includes('zap')) return Zap;
+    if (name.includes('education') || name.includes('school')) return GraduationCap;
+    return CircleDollarSign;
+  };
+  const Icon = getIcon();
+  return (
+    <foreignObject x={x - 10} y={y - 10} width={20} height={20}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+        <Icon size={12} strokeWidth={2.5} />
+      </div>
+    </foreignObject>
+  );
+};
+
+const renderCustomizedLabel = (props: any) => {
+  const { cx, cy, midAngle, outerRadius, percent, name, fill } = props;
+  const RADIAN = Math.PI / 180;
+  
+  if (percent < 0.03) return null; // Hide labels for very small slices
+
+  const sin = Math.sin(-midAngle * RADIAN);
+  const cos = Math.cos(-midAngle * RADIAN);
+  
+  const lineStartX = cx + (outerRadius) * cos;
+  const lineStartY = cy + (outerRadius) * sin;
+  
+  const circleRadius = outerRadius + 25; 
+  const circleX = cx + circleRadius * cos;
+  const circleY = cy + circleRadius * sin;
+  
+  const textX = cx + (circleRadius + 18) * cos;
+  const textY = cy + (circleRadius) * sin;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+
+  return (
+    <g>
+      <line 
+        x1={lineStartX} 
+        y1={lineStartY} 
+        x2={circleX} 
+        y2={circleY} 
+        stroke={fill} 
+        strokeWidth={1.5}
+        opacity={0.6}
+      />
+      <circle cx={circleX} cy={circleY} r={14} fill={fill} stroke="none" />
+      <CategoryIcon category={name} x={circleX} y={circleY} />
+      <text 
+        x={textX} 
+        y={textY} 
+        dy={5} 
+        textAnchor={textAnchor} 
+        fill={fill}
+        fontSize={13}
+        fontWeight={700}
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    </g>
+  );
+};
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -181,12 +251,12 @@ export const Dashboard: React.FC = () => {
                 >
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--success)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="var(--success)" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--danger)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="var(--danger)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-gray-800" />
@@ -204,7 +274,7 @@ export const Dashboard: React.FC = () => {
                   <Area
                     type="monotone"
                     dataKey="Income"
-                    stroke="#10b981"
+                    stroke="var(--success)"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorIncome)"
@@ -212,7 +282,7 @@ export const Dashboard: React.FC = () => {
                   <Area
                     type="monotone"
                     dataKey="Expenses"
-                    stroke="#ef4444"
+                    stroke="var(--danger)"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorExpense)"
@@ -243,30 +313,26 @@ export const Dashboard: React.FC = () => {
                   <Pie
                     data={categoryData}
                     cx="50%"
-                    cy="45%"
-                    innerRadius={60}
+                    cy="50%"
+                    innerRadius={55}
                     outerRadius={80}
-                    paddingAngle={5}
                     dataKey="value"
+                    stroke="none"
+                    labelLine={false}
+                    label={renderCustomizedLabel}
                   >
                     {categoryData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value) => `₹${value}`}
+                    formatter={(value: any) => `₹${value}`}
                     contentStyle={{
                       backgroundColor: 'var(--card-custom)',
                       borderColor: 'var(--border-custom)',
                       color: 'var(--text-custom)',
                       borderRadius: '12px'
                     }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={36}
-                    iconType="circle"
-                    iconSize={8}
                   />
                 </PieChart>
               </ResponsiveContainer>

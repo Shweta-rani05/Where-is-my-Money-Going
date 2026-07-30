@@ -1,10 +1,87 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle2, AlertCircle, ArrowRight, Home, ShoppingBag, Utensils, Plane, Car, Zap, Heart, GraduationCap, CircleDollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { statementService, type ParsedTransaction } from '../services/statement.service';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+const COLORS = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)'
+];
+
+const CategoryIcon = ({ category, x, y }: { category: string, x: number, y: number }) => {
+  const getIcon = () => {
+    const name = category.toLowerCase();
+    if (name.includes('rent') || name.includes('home') || name.includes('house')) return Home;
+    if (name.includes('food') || name.includes('dining') || name.includes('restaurant')) return Utensils;
+    if (name.includes('travel') || name.includes('flight') || name.includes('plane')) return Plane;
+    if (name.includes('transport') || name.includes('train') || name.includes('bus') || name.includes('car')) return Car;
+    if (name.includes('shopping') || name.includes('clothes')) return ShoppingBag;
+    if (name.includes('health') || name.includes('medical')) return Heart;
+    if (name.includes('bill') || name.includes('utility') || name.includes('zap')) return Zap;
+    if (name.includes('education') || name.includes('school')) return GraduationCap;
+    return CircleDollarSign;
+  };
+  const Icon = getIcon();
+  return (
+    <foreignObject x={x - 10} y={y - 10} width={20} height={20}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+        <Icon size={12} strokeWidth={2.5} />
+      </div>
+    </foreignObject>
+  );
+};
+
+const renderCustomizedLabel = (props: any) => {
+  const { cx, cy, midAngle, outerRadius, percent, name, fill } = props;
+  const RADIAN = Math.PI / 180;
+  
+  if (percent < 0.03) return null; // Hide labels for very small slices
+
+  const sin = Math.sin(-midAngle * RADIAN);
+  const cos = Math.cos(-midAngle * RADIAN);
+  
+  const lineStartX = cx + (outerRadius) * cos;
+  const lineStartY = cy + (outerRadius) * sin;
+  
+  const circleRadius = outerRadius + 25; 
+  const circleX = cx + circleRadius * cos;
+  const circleY = cy + circleRadius * sin;
+  
+  const textX = cx + (circleRadius + 18) * cos;
+  const textY = cy + (circleRadius) * sin;
+  const textAnchor = cos >= 0 ? 'start' : 'end';
+
+  return (
+    <g>
+      <line 
+        x1={lineStartX} 
+        y1={lineStartY} 
+        x2={circleX} 
+        y2={circleY} 
+        stroke={fill} 
+        strokeWidth={1.5}
+        opacity={0.6}
+      />
+      <circle cx={circleX} cy={circleY} r={14} fill={fill} stroke="none" />
+      <CategoryIcon category={name} x={circleX} y={circleY} />
+      <text 
+        x={textX} 
+        y={textY} 
+        dy={5} 
+        textAnchor={textAnchor} 
+        fill={fill}
+        fontSize={13}
+        fontWeight={700}
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    </g>
+  );
+};
 
 export const StatementAnalytics: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -183,7 +260,7 @@ export const StatementAnalytics: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-6 bg-card-custom border border-border-custom rounded-2xl flex items-center gap-4">
-              <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[var(--success)]/10 text-[var(--success)] rounded-xl flex items-center justify-center">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
@@ -193,7 +270,7 @@ export const StatementAnalytics: React.FC = () => {
             </div>
             
             <div className="p-6 bg-card-custom border border-border-custom rounded-2xl flex items-center gap-4">
-              <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[var(--warning)]/10 text-[var(--warning)] rounded-xl flex items-center justify-center">
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div>
@@ -216,10 +293,12 @@ export const StatementAnalytics: React.FC = () => {
                         data={getCategoryData()}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={5}
+                        innerRadius={55}
+                        outerRadius={80}
                         dataKey="value"
+                        stroke="none"
+                        labelLine={false}
+                        label={renderCustomizedLabel}
                       >
                         {getCategoryData().map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -229,7 +308,6 @@ export const StatementAnalytics: React.FC = () => {
                         formatter={(value: any) => `₹${Number(value).toLocaleString()}`}
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       />
-                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -250,8 +328,8 @@ export const StatementAnalytics: React.FC = () => {
                         itemStyle={{ color: '#fff' }}
                       />
                       <Legend />
-                      <Bar dataKey="Income" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={60} />
-                      <Bar dataKey="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                      <Bar dataKey="Income" fill="var(--success)" radius={[4, 4, 0, 0]} maxBarSize={60} />
+                      <Bar dataKey="Expense" fill="var(--danger)" radius={[4, 4, 0, 0]} maxBarSize={60} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -285,7 +363,7 @@ export const StatementAnalytics: React.FC = () => {
                             {tx.category}
                           </span>
                         </td>
-                        <td className={`py-3 px-6 text-right font-bold ${tx.type === 'income' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        <td className={`py-3 px-6 text-right font-bold tabular-nums ${tx.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                           {tx.type === 'income' ? '+' : '-'}₹{tx.amount.toLocaleString()}
                         </td>
                       </tr>

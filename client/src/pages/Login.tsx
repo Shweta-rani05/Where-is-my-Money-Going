@@ -42,10 +42,6 @@ export const Login: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <div className="text-center mb-2">
-        <h2 className="text-xl font-bold tracking-tight">Welcome Back</h2>
-        <p className="text-xs text-text-muted mt-1">Please sign in to access your finances</p>
-      </div>
 
       <div className="space-y-4">
         {/* Email Input Field */}
@@ -58,7 +54,7 @@ export const Login: React.FC = () => {
             {...register('email')}
             placeholder="name@example.com"
             disabled={isLoading}
-            className={`w-full px-4 py-3 rounded-xl border bg-background-custom text-text-custom text-sm focus:outline-none focus:ring-2 transition-all ${
+            className={`w-full px-4 py-3 rounded-lg border bg-background-custom text-text-custom text-sm focus:outline-none focus:ring-2 transition-all ${
               errors.email
                 ? 'border-rose-500 focus:ring-rose-500/20'
                 : 'border-border-custom focus:ring-primary/20 focus:border-primary'
@@ -81,7 +77,7 @@ export const Login: React.FC = () => {
             {...register('password')}
             placeholder="••••••••"
             disabled={isLoading}
-            className={`w-full px-4 py-3 rounded-xl border bg-background-custom text-text-custom text-sm focus:outline-none focus:ring-2 transition-all ${
+            className={`w-full px-4 py-3 rounded-lg border bg-background-custom text-text-custom text-sm focus:outline-none focus:ring-2 transition-all ${
               errors.password
                 ? 'border-rose-500 focus:ring-rose-500/20'
                 : 'border-border-custom focus:ring-primary/20 focus:border-primary'
@@ -99,9 +95,9 @@ export const Login: React.FC = () => {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3 px-4 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-opacity-90 shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full py-3 px-4 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-opacity-90 shadow-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? 'Verifying Credentials...' : 'Sign In'}
+        {isLoading ? 'Signing in...' : 'Sign In'}
       </button>
 
       {/* Footer link to Register */}
