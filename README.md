@@ -4,6 +4,15 @@ An **AI-powered Personal Finance & Expense Tracking** application built with the
 
 ---
 
+## 🧪 Test Credentials
+
+If you want to test the application without creating a new account (and to help reduce the use of Google free tokens), please use the following test credentials to log in:
+
+* **Email:** `test1@gmail.com`
+* **Password:** `testtest`
+
+---
+
 ## 🚀 Features
 
 ### 🔐 Authentication & Security
