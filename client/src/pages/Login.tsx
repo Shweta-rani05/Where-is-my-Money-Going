@@ -109,6 +109,12 @@ export const Login: React.FC = () => {
           </Link>
         </p>
       </div>
+
+      <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-sm text-text-custom mt-4">
+        <p className="font-semibold mb-2">Demo Credentials:</p>
+        <p className="mb-1">Email: <span className="font-medium font-mono ml-2">test1@gmail.com</span></p>
+        <p>Password: <span className="font-medium font-mono ml-2">testtest</span></p>
+      </div>
     </form>
   );
 };
