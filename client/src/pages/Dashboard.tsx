@@ -9,7 +9,8 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Legend
 } from 'recharts';
 import { 
   TrendingUp, TrendingDown, PiggyBank, Wallet,
@@ -105,6 +106,14 @@ export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -314,12 +323,12 @@ export const Dashboard: React.FC = () => {
                     data={categoryData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={55}
-                    outerRadius={80}
+                    innerRadius={50}
+                    outerRadius={70}
                     dataKey="value"
                     stroke="none"
                     labelLine={false}
-                    label={renderCustomizedLabel}
+                    label={isMobile ? undefined : renderCustomizedLabel}
                   >
                     {categoryData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -334,6 +343,7 @@ export const Dashboard: React.FC = () => {
                       borderRadius: '12px'
                     }}
                   />
+                  {isMobile && <Legend wrapperStyle={{ fontSize: '11px', marginTop: '10px' }} />}
                 </PieChart>
               </ResponsiveContainer>
             )}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, ArrowRight, Home, ShoppingBag, Utensils, Plane, Car, Zap, Heart, GraduationCap, CircleDollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { statementService, type ParsedTransaction } from '../services/statement.service';
@@ -94,6 +94,14 @@ export const StatementAnalytics: React.FC = () => {
     duplicates: number;
     transactions: ParsedTransaction[];
   } | null>(null);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -293,12 +301,12 @@ export const StatementAnalytics: React.FC = () => {
                         data={getCategoryData()}
                         cx="50%"
                         cy="50%"
-                        innerRadius={55}
-                        outerRadius={80}
+                        innerRadius={50}
+                        outerRadius={70}
                         dataKey="value"
                         stroke="none"
                         labelLine={false}
-                        label={renderCustomizedLabel}
+                        label={isMobile ? undefined : renderCustomizedLabel}
                       >
                         {getCategoryData().map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -308,6 +316,7 @@ export const StatementAnalytics: React.FC = () => {
                         formatter={(value: any) => `₹${Number(value).toLocaleString()}`}
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       />
+                      {isMobile && <Legend wrapperStyle={{ fontSize: '11px', marginTop: '10px' }} />}
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
