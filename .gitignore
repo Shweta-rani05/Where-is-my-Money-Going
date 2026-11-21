@@ -40,3 +40,12 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Python / FastAPI analytics service
+analytics/.venv/
+analytics/venv/
+analytics/__pycache__/
+analytics/**/__pycache__/
+analytics/**/*.pyc
+analytics/models/categorizer/*.pkl
+analytics/.env

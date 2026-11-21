@@ -13,6 +13,10 @@ import Goals from './pages/Goals';
 import AIChat from './pages/AIChat';
 import AIInsights from './pages/AIInsights';
 import StatementAnalytics from './pages/StatementAnalytics';
+import Banks from './pages/Banks';
+import RecurringTransactions from './pages/RecurringTransactions';
+import Investments from './pages/Investments';
+import CreditScore from './pages/CreditScore';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
@@ -33,6 +37,10 @@ export const App: React.FC = () => {
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/budgets" element={<Budgets />} />
           <Route path="/goals" element={<Goals />} />
+          <Route path="/investments" element={<Investments />} />
+          <Route path="/credit-score" element={<CreditScore />} />
+          <Route path="/recurring" element={<RecurringTransactions />} />
+          <Route path="/banks" element={<Banks />} />
           <Route path="/ai-chat" element={<AIChat />} />
           <Route path="/ai-insights" element={<AIInsights />} />
           <Route path="/statements" element={<StatementAnalytics />} />

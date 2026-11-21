@@ -2,85 +2,95 @@
 
 @theme {
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-background-custom: var(--background-custom);
   --color-card-custom: var(--card-custom);
+  --color-elevated-surface: var(--elevated-surface);
   --color-border-custom: var(--border-custom);
   --color-text-custom: var(--text-custom);
   --color-text-muted: var(--text-muted);
 }
 
 :root {
-  /* Light Mode Colors - White Background & Slate accents */
+  /* Refined Light Mode - Calming crisp slate with emerald-teal accents */
   --background-overlay: #ffffff;
-  --background-custom: #ffffff;
+  --background-custom: #f8fafc;
   --card-custom: #ffffff;
-  --elevated-surface: #f8fafc;
+  --elevated-surface: #f1f5f9;
   --border-custom: #e2e8f0;
-  --text-custom: #0F172A;
-  --text-muted: #475569;
-  
+  --text-custom: #0f172a;
+  --text-muted: #64748b;
+
   /* Accents */
-  --primary: #00A572;
-  --secondary: #0D9488;
-  --success: #16A34A;
-  --danger: #E11D48;
-  --warning: #D97706;
+  --primary: #0d9488;
+  --primary-hover: #0f766e;
+  --secondary: #4f46e5;
+  --success: #059669;
+  --danger: #e11d48;
+  --warning: #d97706;
 
   /* Chart Palette */
-  --chart-1: #00A572;
-  --chart-2: #0D9488;
-  --chart-3: #D97706;
-  --chart-4: #E11D48;
-  --chart-5: #0EA5E9;
+  --chart-1: #0d9488;
+  --chart-2: #4f46e5;
+  --chart-3: #f59e0b;
+  --chart-4: #e11d48;
+  --chart-5: #0284c7;
 
   /* Primitives */
-  --radius-card: 12px;
-  --radius-input: 8px;
+  --radius-card: 16px;
+  --radius-input: 10px;
 }
 
 .dark {
-  /* Dark Mode Colors - Pure Black Background & sleek panels */
-  --background-overlay: #000000;
-  --background-custom: #000000;
-  --card-custom: #0a0a0c;
-  --elevated-surface: #141416;
-  --border-custom: #1f1f23;
-  --text-custom: #F5F6F8;
-  --text-muted: #94A3B8;
-  
+  /* Refined Dark Mode - Deep obsidian navy with luminous emerald & indigo */
+  --background-overlay: #0b0f17;
+  --background-custom: #0b0f17;
+  --card-custom: #111827;
+  --elevated-surface: #1e293b;
+  --border-custom: #1e293b;
+  --text-custom: #f8fafc;
+  --text-muted: #94a3b8;
+
   /* Accents */
-  --primary: #00A572;
-  --secondary: #14B8A6;
-  --success: #22C55E;
-  --danger: #F43F5E;
-  --warning: #F59E0B;
+  --primary: #14b8a6;
+  --primary-hover: #2dd4bf;
+  --secondary: #6366f1;
+  --success: #10b981;
+  --danger: #f43f5e;
+  --warning: #f59e0b;
 
   /* Chart Palette */
-  --chart-1: #00A572;
-  --chart-2: #14B8A6;
-  --chart-3: #F59E0B;
-  --chart-4: #F43F5E;
-  --chart-5: #38BDF8;
+  --chart-1: #14b8a6;
+  --chart-2: #6366f1;
+  --chart-3: #f59e0b;
+  --chart-4: #f43f5e;
+  --chart-5: #38bdf8;
 }
 
-/* Glassmorphism Fallback (Rendered as clean solid panels without background images) */
+/* Glassmorphism Fallback */
 .glass-panel {
   background: var(--card-custom);
   border: 1px solid var(--border-custom);
 }
 
-/* Clean Solid Backgrounds and Smooth Transitions */
+/* Base Body Styles */
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: var(--text-custom);
   background-color: var(--background-custom);
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.25s ease, color 0.25s ease;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Clean Custom Scrollbars */
+/* Tabular numbers for financial precision */
+.font-numeric {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -98,4 +108,3 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
-

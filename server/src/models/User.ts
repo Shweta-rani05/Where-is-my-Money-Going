@@ -6,6 +6,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   avatar?: string;
+  currency?: string;
   createdAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
 }
@@ -33,6 +34,12 @@ const UserSchema = new Schema<IUser>(
     avatar: {
       type: String,
       default: '',
+    },
+    currency: {
+      type: String,
+      default: 'INR',
+      trim: true,
+      uppercase: true,
     },
   },
   {

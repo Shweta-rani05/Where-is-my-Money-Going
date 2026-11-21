@@ -88,6 +88,86 @@ Interactive dashboards built using **Recharts** featuring:
 
 ---
 
+### 📧 Email Expense Reports
+
+Powered by **Resend API**, receive high-level monthly summaries and statements straight to your email:
+
+* Income vs Expense comparison
+* Top spending categories & budget limit alerts
+* Top 5 expense items
+* On-demand report delivery & in-app summary preview
+
+---
+
+### 🏦 Bank API Integration & Live Sync
+
+Connect multiple bank institutions (HDFC, SBI, ICICI, Axis, Chase, Bank of America, etc.) with:
+
+* Automated read-only bank feeds
+* Intelligent transaction deduplication against your ledger
+* Real-time bank balance tracking across checking, savings, and credit accounts
+* One-click manual and automated sync
+
+---
+
+### 🔄 Recurring Transactions & Subscription Management
+
+Track recurring financial obligations and income streams with automated scheduling:
+
+* Manage subscriptions (Netflix, Spotify, Gym), utility bills, and salary income
+* Choose recurrence frequency: Daily, Weekly, Monthly, or Yearly
+* Next due date calculation and automated overdue alerts
+* One-click "Record Now" or bulk "Process Due Items" directly into your main transaction ledger
+* Pause and resume rules anytime
+
+---
+
+### 📈 Investment & Portfolio Tracking
+
+Track multi-asset investment portfolios with real-time valuation and returns analysis:
+
+* Multi-asset support: Stocks, Mutual Funds, Crypto, Gold, and Fixed Deposits
+* Real-time portfolio valuation, total invested capital, and overall P&L (+ROI %)
+* Interactive Asset Allocation donut chart powered by Recharts
+* Quick market quotes refresh and inline price updates
+* Optional auto-recording of investment purchases into the cashflow ledger
+
+---
+
+### 🔔 Smart Financial Notifications & Alert Center
+
+Proactive in-app notification center alerting users to critical financial events:
+
+* Budget thresholds at 80% and 100%+ overspending warnings
+* Upcoming and overdue recurring subscription bills
+* Savings goal completion milestones (100% target reached)
+* Interactive navbar notification bell with unread badge counter, popover tray, and direct navigation links
+
+---
+
+### 🌍 Multi-Currency Support & Live FX Conversion
+
+Seamless multi-currency support with dynamic foreign exchange calculations:
+
+* Support for global currencies: INR (₹), USD ($), EUR (€), GBP (£), AED (د.إ), JPY (¥), CAD (CA$), AUD (A$), and SGD (S$)
+* Live reference exchange rates calculator and converter endpoints
+* Fast global currency selector in the top navigation bar with persistent user preferences
+* Profile currency settings in user preferences
+
+---
+
+### 🛡️ Credit Score Insights & What-If Simulator
+
+Comprehensive creditworthiness tracking and scenario simulation on a 300–900 bureau scale:
+
+* Five-factor pillar breakdown: Payment History (35%), Credit Utilization (30%), Credit Age (15%), Debt-to-Income (10%), and Credit Mix (10%)
+* Interactive visual credit gauge with status tiers (Excellent, Good, Fair, Poor)
+* 6-month historical credit score trajectory chart
+* Interactive What-If Simulator: predict score impacts of paying down debt, increasing credit limits, opening accounts, or missed bills
+* Data-driven AI tips for boosting and maintaining credit health
+
+---
+
 ### 💰 Budget Management
 
 * Create Monthly Budgets
@@ -265,13 +345,13 @@ Supports:
 
 ## 🔮 Future Enhancements
 
-*  Email Expense Reports
-*  Bank API Integration
-*  Recurring Transactions
-*  Investment Tracking
-*  Smart Financial Notifications
-*  Multi-Currency Support
-*  Credit Score Insights
+* [x] ✅ **Email Expense Reports** (Built with Resend API)
+* [x] ✅ **Bank API Integration** (Live bank feed sync & automated deduplication)
+* [x] ✅ **Recurring Transactions** (Automated bills, subscriptions & salary schedules)
+* [x] ✅ **Investment Tracking** (Multi-asset portfolio, live P&L returns & asset allocation)
+* [x] ✅ **Smart Financial Notifications** (Proactive budget breaches & bill alerts)
+* [x] ✅ **Multi-Currency Support** (Live exchange rates & global currency switcher)
+* [x] ✅ **Credit Score Insights** (300–900 scoring engine, factor breakdown & simulator)
 
 ---
 

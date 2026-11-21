@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { AlertTriangle, Eye, EyeOff, Mail, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { authService } from '../services/auth.service';
+import EmailReportModal from '../components/EmailReportModal';
 import toast from 'react-hot-toast';
 
 // --- Validation Schemas ---
@@ -30,11 +32,13 @@ type PasswordFields = z.infer<typeof passwordSchema>;
 
 export const Settings: React.FC = () => {
   const { user, updateUser, logout } = useAuth();
+  const { currentCurrency, setCurrency, currencies } = useCurrency();
   const navigate = useNavigate();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
+  const [showEmailReportModal, setShowEmailReportModal] = useState(false);
 
   // --- Profile Form ---
   const {
@@ -180,7 +184,43 @@ export const Settings: React.FC = () => {
           </div>
         </div>
 
-        {/* ──────────── 2. Change Password ──────────── */}
+        {/* ──────────── 2. Currency & Regional ──────────── */}
+        <div className="border border-border-custom rounded-2xl bg-card-custom shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 md:p-8 flex-1">
+            <h3 className="font-bold text-lg text-text-custom mb-1 flex items-center gap-2">
+              <Globe className="w-5 h-5 text-primary" />
+              Currency & Region
+            </h3>
+            <p className="text-sm text-text-muted mb-6">
+              Choose your default reporting currency and display symbol across the app.
+            </p>
+
+            <div className="max-w-md">
+              <label className="block text-sm font-medium text-text-custom mb-2">
+                Preferred Currency
+              </label>
+              <select
+                value={currentCurrency}
+                onChange={(e) => {
+                  setCurrency(e.target.value);
+                  toast.success(`Display currency set to ${e.target.value}`);
+                }}
+                className="w-full px-4 py-2.5 rounded-xl border border-border-custom bg-background-custom text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer"
+              >
+                {currencies.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.symbol} {c.code} - {c.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-text-muted mt-2">
+                Amounts are automatically converted using live reference exchange rates.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ──────────── 3. Change Password ──────────── */}
         <div className="border border-border-custom rounded-2xl bg-card-custom shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 md:p-8 flex-1">
             <h3 className="font-bold text-lg text-text-custom mb-1">Security</h3>
@@ -261,7 +301,37 @@ export const Settings: React.FC = () => {
           </div>
         </div>
 
-        {/* ──────────── 3. Danger Zone ──────────── */}
+        {/* ──────────── 3. Email Expense Reports ──────────── */}
+        <div className="border border-border-custom rounded-2xl bg-card-custom shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 md:p-8 flex-1">
+            <h3 className="font-bold text-lg text-text-custom mb-1 flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              Email Expense Reports
+            </h3>
+            <p className="text-sm text-text-muted mb-6">
+              Generate detailed monthly financial statements and receive them directly at <span className="font-semibold text-text-custom">{user?.email}</span>.
+            </p>
+
+            <div className="p-5 rounded-xl border border-border-custom bg-background-custom/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-sm text-text-custom mb-1">On-demand Financial Statements</p>
+                <p className="text-xs text-text-muted max-w-md">
+                  Includes income vs expense totals, net savings, budget limits compliance, and category percentage distributions.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEmailReportModal(true)}
+                className="whitespace-nowrap py-2.5 px-5 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-semibold shadow-sm transition-all cursor-pointer select-none active:scale-95 flex items-center gap-2"
+              >
+                <Mail className="w-4 h-4" />
+                Generate & Send Report
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ──────────── 4. Danger Zone ──────────── */}
         <div className="border border-rose-500/20 rounded-2xl bg-card-custom shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 md:p-8 flex-1">
             <h3 className="font-bold text-lg text-rose-500 mb-1 flex items-center gap-2">
@@ -321,6 +391,12 @@ export const Settings: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ──────────── Email Report Modal ──────────── */}
+      <EmailReportModal
+        isOpen={showEmailReportModal}
+        onClose={() => setShowEmailReportModal(false)}
+      />
     </div>
   );
 };

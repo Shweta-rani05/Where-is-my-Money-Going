@@ -1,4 +1,5 @@
 services:
+  # ── 1. Backend API (Node.js / Express) ───────────────────────────────────────
   - type: web
     name: money-tracker-api
     env: node
@@ -15,4 +16,33 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: CORS_ORIGIN
+        sync: false
+      # URL of the analytics microservice (set after deploying analytics service)
+      - key: ANALYTICS_URL
+        sync: false
+
+  # ── 2. Analytics ML Microservice (Python / FastAPI) ──────────────────────────
+  - type: web
+    name: money-tracker-analytics
+    env: python
+    rootDir: analytics
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      # Set to the money-tracker-api Render URL to restrict CORS
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  # ── 3. Frontend (React / Vite Static Site) ────────────────────────────────────
+  - type: web
+    name: money-tracker-client
+    env: static
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      # Set to your money-tracker-api Render URL (e.g. https://money-tracker-api.onrender.com)
+      - key: VITE_API_URL
         sync: false
