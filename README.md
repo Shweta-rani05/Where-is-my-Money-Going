@@ -204,7 +204,96 @@ Features include:
 * Loading Skeletons
 * Toast Notifications
 * Mobile Friendly
-* Dark Theme Support
+* Crisp Light-Mode Fintech Design System
+
+---
+
+## 🏛️ High-Level Design (HLD) Architecture
+
+The platform follows a distributed, multi-tier microservice-enhanced architecture separating user presentation, API gateway business logic, persistence, and specialized Python statistical machine learning services:
+
+```mermaid
+flowchart TD
+    subgraph Client ["1. Client Presentation Tier (React 19 + TypeScript + Vite)"]
+        User(["👤 User / Client Browser"])
+        SPA["Single Page Application (SPA)"]
+        Dash["Financial Command Center"]
+        OCR["In-Browser OCR (PDF.js + Canvas)"]
+        FX["Currency Conversion Context"]
+        State["State Management (TanStack Query)"]
+
+        User -->|Interacts| SPA
+        SPA --> Dash
+        SPA --> OCR
+        SPA --> FX
+        SPA --> State
+    end
+
+    subgraph Gateway ["2. API Gateway & Core Backend (Node.js + Express + TypeScript)"]
+        Security["Security Layer (Helmet, CORS, Sanitization)"]
+        AuthGuard["JWT Authentication Guard"]
+        Router["RESTful API Gateway Routes"]
+        
+        subgraph CoreServices ["Core Business Services"]
+            TxService["Transaction & Cashflow Service"]
+            BudgetService["Budget & Goal Vault Service"]
+            BankService["Bank Feed & Deduplication Engine"]
+            InvestService["Investment & Portfolio Service"]
+            RecurService["Recurring Subscription Scheduler"]
+            CreditService["Credit Score 300-900 Engine"]
+            NotifyService["Alert & Notification Center"]
+            ReportService["Monthly Email Report Service"]
+        end
+
+        Bridge["Analytics Microservice Client (HTTP Bridge)"]
+
+        Security --> AuthGuard
+        AuthGuard --> Router
+        Router --> CoreServices
+        TxService --> Bridge
+    end
+
+    subgraph MLService ["3. Analytics & ML Microservice (Python 3.11 + FastAPI)"]
+        FastAPI["FastAPI ASGI Server (:8000)"]
+        AnomalyDet["Statistical Anomaly Detector (Z-Score)"]
+        Categorizer["Expense NLP Classifier (TF-IDF)"]
+        Forecaster["Spend Trend Forecaster"]
+        HealthScorer["Financial Health Scoring Engine"]
+
+        FastAPI --> AnomalyDet
+        FastAPI --> Categorizer
+        FastAPI --> Forecaster
+        FastAPI --> HealthScorer
+    end
+
+    subgraph Database ["4. Persistence Tier (MongoDB Atlas Cloud)"]
+        Mongo[("MongoDB Atlas Database")]
+        Collections[("Collections: Users, Transactions, Budgets, Goals, Banks, Investments, Recurring, CreditScores, Notifications, AIHistory")]
+        Mongo --- Collections
+    end
+
+    subgraph External ["5. External Services & Cloud APIs"]
+        Gemini["Google Gemini 2.5 Flash API (LLM & Multimodal OCR)"]
+        Resend["Resend API (Transactional Email Delivery)"]
+        FXRates["Live Reference Exchange Rates API"]
+    end
+
+    %% Inter-tier communication flows
+    SPA <-->|"REST API over HTTPS + JWT Bearer Token"| Security
+    OCR -->|"Base64 Image Matrix Payload"| Gemini
+    Router <-->|"Inter-Service HTTP Requests"| FastAPI
+    CoreServices <-->|"Mongoose ODM (TLS / SSL Connection)"| Mongo
+    Router <-->|"Prompt & Financial Context Payload"| Gemini
+    ReportService -->|"HTML Email Template Dispatch"| Resend
+    FX <-->|"Exchange Rates Fetch"| FXRates
+```
+
+### Architectural Flow Highlights:
+1. **Client Presentation Tier:** The responsive React single page application handles user interactions, tabular data formatting (`.font-numeric`), and in-browser statement rendering via PDF.js without storing sensitive files on disk.
+2. **API Gateway & Core Backend:** Node.js Express server enforces security via Helmet and JWT guards, running business logic for ledgers, budgets, credit score calculations, and bank deduplication.
+3. **Analytics Microservice:** An asynchronous Python FastAPI service dedicated to data science tasks (Z-Score anomaly detection, TF-IDF expense classification, and spend forecasting).
+4. **Data Persistence Tier:** MongoDB Atlas cloud database storing 10 schema collections with compound indexing for optimized $O(\log N)$ retrieval.
+5. **External Cloud Ecosystem:** Google Gemini 2.5 Flash for contextual conversational advisory & vision OCR parsing; Resend API for transactional monthly expense summaries.
 
 ---
 
@@ -252,11 +341,14 @@ Features include:
 ```text
 Where-Is-My-Money-Going/
 │
-├── client/                 # React + Vite + TypeScript frontend
-├── server/                 # Express + TypeScript backend
-├── package.json            # Root scripts
-├── README.md
-└── .gitignore
+├── client/                     # React 19 + Vite + TypeScript frontend
+├── server/                     # Node.js + Express + TypeScript backend API
+├── analytics/                  # Python 3.11 + FastAPI machine learning microservice
+├── PROJECT_DOCUMENTATION.md    # Comprehensive technical & viva defense dossier
+├── package.json                # Root package & monorepo scripts
+├── render.yaml                 # Multi-service infrastructure-as-code deployment
+├── README.md                   # Project overview & quickstart guide
+└── .gitignore                  # Git exclusions
 ```
 
 ---
